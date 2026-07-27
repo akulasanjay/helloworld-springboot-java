@@ -198,6 +198,9 @@ jobs:
           IMAGE_URI="${{ needs.build.outputs.image_uri }}"
           INSTANCE_ID="${{ steps.get-instance.outputs.instance_id }}"
           REGION="${{ inputs.aws_region }}"
+          KEY_PAIR="sanjay-key"   # your AWS key pair — used when this instance was launched
+
+          echo "Deploying $IMAGE_URI to EC2 instance $INSTANCE_ID (key pair: $KEY_PAIR)"
 
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
@@ -244,10 +247,16 @@ jobs:
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
           echo "| **Instance ID** | $INSTANCE_ID |" >> $GITHUB_STEP_SUMMARY
           echo "| **Public IP** | $PUBLIC_IP |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Key Pair** | sanjay-key |" >> $GITHUB_STEP_SUMMARY
           echo "| **Image** | ${{ needs.build.outputs.image_uri }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Region** | ${{ inputs.aws_region }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Test it:" >> $GITHUB_STEP_SUMMARY
+          echo "**Test the app:**" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "curl http://$PUBLIC_IP:8080/" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**SSH into the instance:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "ssh -i ~/.ssh/sanjay-key.pem ec2-user@$PUBLIC_IP" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

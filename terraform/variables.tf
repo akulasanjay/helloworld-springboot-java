@@ -63,3 +63,19 @@ variable "s3_artifact_bucket" {
   type        = string
   default     = "helloworld-springboot-artifacts"
 }
+
+# NOTE: ECS Fargate does NOT use EC2 key pairs.
+# Fargate tasks run as containers managed by AWS — there is no underlying
+# EC2 instance to SSH into. To access a running container use:
+#   aws ecs execute-command \
+#     --cluster helloworld-springboot-cluster \
+#     --task <task-id> \
+#     --container helloworld-springboot \
+#     --interactive \
+#     --command "/bin/sh"
+# The key pair "sanjay-key" is used only by the EC2 deployment (terraform-ec2/).
+variable "key_pair_name" {
+  description = "EC2 key pair name — not used by Fargate tasks, kept for reference only"
+  type        = string
+  default     = "sanjay-key"
+}

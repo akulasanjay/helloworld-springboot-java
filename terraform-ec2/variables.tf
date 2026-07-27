@@ -32,7 +32,7 @@ variable "instance_type" {
 variable "key_pair_name" {
   description = "Name of an existing EC2 Key Pair for SSH access"
   type        = string
-  default     = ""
+  default     = "sanjay-key"
 }
 
 variable "ecr_image" {
