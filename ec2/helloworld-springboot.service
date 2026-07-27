@@ -1,0 +1,18 @@
+[Unit]
+Description=Hello World Spring Boot Application
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/opt/helloworld-springboot
+ExecStart=/usr/bin/java -jar /opt/helloworld-springboot/app.jar
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+Environment="DEPLOYMENT_TYPE=EC2-Systemd"
+Environment="SERVER_PORT=8080"
+
+[Install]
+WantedBy=multi-user.target

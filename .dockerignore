@@ -1,0 +1,15 @@
+target/
+.git/
+.gitignore
+.idea/
+*.iml
+.mvn/
+mvnw
+mvnw.cmd
+README.md
+terraform/
+terraform-ec2/
+codepipeline/
+ec2/
+ecs/
+*.zip

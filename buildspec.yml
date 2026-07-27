@@ -1,0 +1,58 @@
+version: 0.2
+
+# Required CodeBuild environment variables:
+#   AWS_DEFAULT_REGION  — set automatically by CodeBuild
+#   AWS_ACCOUNT_ID      — set as env var in the CodeBuild project
+#   IMAGE_REPO_NAME     — set below or override in CodeBuild project
+#   CONTAINER_NAME      — must match the container name in the ECS task definition
+
+env:
+  variables:
+    IMAGE_REPO_NAME: "helloworld-springboot"
+    CONTAINER_NAME:  "helloworld-springboot"
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
+    commands:
+      - echo "Installing dependencies..."
+
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION \
+          | docker login --username AWS --password-stdin \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - echo "Image tag = $IMAGE_TAG"
+
+  build:
+    commands:
+      - echo "Running unit tests..."
+      - mvn -q test
+      - echo "Building JAR..."
+      - mvn -q clean package -DskipTests
+      - echo "Building Docker image..."
+      - docker build -t $REPOSITORY_URI:latest -t $REPOSITORY_URI:$IMAGE_TAG .
+
+  post_build:
+    commands:
+      - echo "Pushing Docker image to ECR..."
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo "Uploading JAR to S3 for EC2 deployments..."
+      - aws s3 cp target/helloworld-springboot-java.jar \
+            s3://$S3_ARTIFACT_BUCKET/releases/$IMAGE_TAG/helloworld-springboot-java.jar \
+            --region $AWS_DEFAULT_REGION || true
+      - echo "Writing imagedefinitions.json for ECS deploy stage..."
+      - printf '[{"name":"%s","imageUri":"%s"}]' \
+            $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG \
+            > imagedefinitions.json
+      - cat imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - target/helloworld-springboot-java.jar
