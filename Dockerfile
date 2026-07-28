@@ -8,10 +8,10 @@ COPY src ./src
 RUN mvn -q clean package -DskipTests
 
 # ---- Run stage ----
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 # Create non-root user for security
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 COPY --from=build /app/target/helloworld-springboot-java.jar app.jar
 RUN chown appuser:appgroup app.jar
 USER appuser

@@ -32,7 +32,7 @@ resource "aws_lb_target_group" "app" {
   vpc_id   = aws_vpc.main.id
 
   health_check {
-    path                = "/health"
+    path                = "/actuator/health"
     matcher             = "200"
     interval            = 30
     timeout             = 5
@@ -68,13 +68,13 @@ resource "aws_instance" "app" {
   subnet_id              = aws_subnet.public[0].id
   vpc_security_group_ids = [aws_security_group.ec2.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2.name
-  key_name               = var.key_pair_name   # sanjay-key
+  key_name               = var.key_pair_name # sanjay-key
 
   user_data = templatefile("${path.module}/../ec2/user-data.sh.tpl", {
-    aws_region  = var.aws_region
-    ecr_image   = var.ecr_image
-    app_port    = var.app_port
-    account_id  = data.aws_caller_identity.current.account_id
+    aws_region = var.aws_region
+    ecr_image  = var.ecr_image
+    app_port   = var.app_port
+    account_id = data.aws_caller_identity.current.account_id
   })
 
   tags = {
